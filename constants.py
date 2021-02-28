@@ -1,0 +1,1 @@
+GAMEMODE = '3 min'
