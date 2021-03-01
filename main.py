@@ -8,7 +8,7 @@ import os
 import re
 from time import sleep
 import logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s: %(levelname)s: %(message)s\n")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s: %(levelname)s: %(message)s")
 
 from constants import *
 
@@ -63,12 +63,22 @@ if __name__ == '__main__':
     driver.find_element_by_xpath(f"//button[text()='{GAMEMODE}']").click()
     logging.info("Gamemode selected")
 
+
+    last_game_url = ''
+    if re.match("https://www.chess.com/game/live/[0-9]+", driver.current_url):
+        last_game_url = driver.current_url
+
     # Play a game
     driver.find_element_by_xpath(
         "//button[@class='ui_v5-button-component ui_v5-button-primary ui_v5-button-large ui_v5-button-full']"
     ).click()
 
-    while (not re.match("https://www.chess.com/game/live/[0-9]+", driver.current_url)):
+    # Wait until the new game is found
+    while(True):
+        if (driver.current_url != last_game_url and
+            re.match("https://www.chess.com/game/live/[0-9]+", driver.current_url)):
+            break
+
         logging.info("Waiting for a game to start !")
         sleep(0.5)
 
@@ -122,24 +132,30 @@ if __name__ == '__main__':
         while no_moves == len(moves):
             moves = driver.find_elements_by_xpath("//div[@class='move']")
         opponent_move = moves[0].text.split("\n")[1]
-        board.push_san(opponent_move)
-        logging.info(f"Opponent moved: {opponent_move}")
+        opponent_move = board.push_san(opponent_move)
+        logging.info(f"Opponent moved: {opponent_move.uci()}")
         logging.info(f"Current board:\n{board}")
         no_moves += 1
 
+    # import pdb; pdb.set_trace()
     while(True):
         bot_move = engine.play(board, chess.engine.Limit(time=0.1))
         board.push(bot_move.move)
+        logging.info(f"Bot found move: {bot_move.move}")
 
-        bot_move = bot_move.move.uci()
-        from_square = bot_move[:2]
-        to_square = bot_move[2:]
+        bot_move_uci = bot_move.move.uci()
+        from_square = bot_move_uci[:2]
+        to_square = bot_move_uci[2:]
 
         gui.moveTo(pos[ord(from_square[0]) - ord('a') + 1][int(from_square[1])])
+        sleep(0.1)
         gui.click()
+        sleep(0.1)
         gui.moveTo(pos[ord(to_square[0]) - ord('a') + 1][int(to_square[1])])
+        sleep(0.1)
         gui.click()
-        logging.info(f"Bot moved: {board.variation_san(bot_move)}")
+
+        logging.info(f"Bot moved: {bot_move.move}")
         logging.info(f"Current board: {board}")
 
         if board.is_game_over():
@@ -149,9 +165,15 @@ if __name__ == '__main__':
         # wait for the opponent to make a move
         while no_moves == len(moves):
             moves = driver.find_elements_by_xpath("//div[@class='move']")
-        opponent_move = moves[0].text.split("\n")[1]
-        board.push_san(opponent_move)
-        logging.info(f"Opponent moved: {opponent_move}")
+        if bot_color == 'BLACK':
+            opponent_move = moves[-1].text.split("\n")[1]
+        else:
+            opponent_move = moves[-1].text.split("\n")[3]
+        opponent_move = board.push_san(opponent_move)
+        logging.info(f"Opponent moved: {opponent_move.uci()}")
         logging.info(f"Current board: {board}")
         no_moves += 1
+
+    engine.close()
+    driver.close()
 
