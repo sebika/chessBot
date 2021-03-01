@@ -1,3 +1,3 @@
-TIMEOUT = 2
+TIMEOUT = 1
 
 GAMEMODE = '3 min'
