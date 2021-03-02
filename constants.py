@@ -1,3 +1,2 @@
-TIMEOUT = 1
-
-GAMEMODE = '3 min'
+SEPARATOR = '======='
+DEFAULT_GAMEMODE = '3 min'
