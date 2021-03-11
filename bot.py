@@ -6,6 +6,9 @@ import pyautogui as gui
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 from time import sleep
 
 from logger import Logger
@@ -36,6 +39,7 @@ class ChessBot:
 
     def end_game_teardown(self):
         self.board.reset()
+        sleep(2)
 
 
     def teardown(self):
@@ -96,13 +100,25 @@ class ChessBot:
         self.driver.get('https://www.chess.com/play/online')
 
         try:
+            sleep(TIMEOUT/2)
             self.driver.find_element_by_xpath("//a[@class='board-modal-header-close icon-font-chess x']").click()
             self.logger.info("Closed last game summary banner")
         except:
             self.logger.info("No last game summary")
 
-        self.driver.find_element_by_xpath(f"//span[text()='New Game']").click()
-        self.driver.find_element_by_xpath("//div[@class='new-game-index-selector']").click()
+        # self.driver.find_element_by_xpath(f"//span[text()='New Game']").click()
+        element = WebDriverWait(self.driver, TIMEOUT).until(
+            EC.presence_of_element_located((By.XPATH, "//span[text()='New Game']"))
+        )
+        element.click()
+
+
+        # self.driver.find_element_by_xpath("//div[@class='new-game-index-selector']").click()
+        element = WebDriverWait(self.driver, TIMEOUT).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@class='new-game-index-selector']"))
+        )
+        element.click()
+
         self.driver.find_element_by_xpath(f"//button[text()='{gamemode}']").click()
         self.logger.info("Gamemode selected")
 
