@@ -15,10 +15,8 @@ from constants import *
 class ChessBot:
     def __init__(self):
         self.init_firefox_driver()
-        self.init_chess_engine()
-
         self.logger = Logger().get_logger()
-        self.engine = chess.engine.SimpleEngine.popen_uci('/usr/games/stockfish')
+        self.init_chess_engine()
         self.board = chess.Board()
 
 
@@ -29,6 +27,7 @@ class ChessBot:
 
 
     def init_chess_engine(self):
+        self.engine = chess.engine.SimpleEngine.popen_uci('/usr/games/stockfish')
         self.engine.configure({"Minimum Thinking Time": 10})    # 0 - 500
         self.engine.configure({"Slow Mover": 10})               # 10 - 1000
         self.engine.configure({"Threads": 1})
@@ -36,7 +35,7 @@ class ChessBot:
 
 
     def end_game_teardown(self):
-        self.board.reset_board()
+        self.board.reset()
 
 
     def teardown(self):
